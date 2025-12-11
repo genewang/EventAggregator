@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Aggregator Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f1419;
+            color: #e6e6e6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #4a9eff;
+            margin-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #1a1f2e;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #4a9eff;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a9eff;
+        }
+        
+        .controls {
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        select, input {
+            background: #0f1419;
+            border: 1px solid #333;
+            color: #e6e6e6;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        button {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #3a8eef;
+        }
+        
+        .chart-container {
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .chart-title {
+            color: #4a9eff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        canvas {
+            max-height: 400px;
+        }
+        
+        .error {
+            background: #d32f2f;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Event Aggregator Dashboard</h1>
+            <p>Real-time GPU event monitoring and analytics</p>
+        </header>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Events</div>
+                <div class="stat-value" id="total-events">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg GPU Util</div>
+                <div class="stat-value" id="avg-util">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Max Power</div>
+                <div class="stat-value" id="max-power">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ingestion Rate</div>
+                <div class="stat-value" id="ingestion-rate">-</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Region</label>
+                <select id="region-select">
+                    <option value="-1">All Regions</option>
+                    <option value="0">Region 0</option>
+                    <option value="1">Region 1</option>
+                    <option value="2">Region 2</option>
+                    <option value="3" selected>Region 3</option>
+                    <option value="4">Region 4</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Device</label>
+                <select id="device-select">
+                    <option value="-1">All Devices</option>
+                    <option value="0">Device 0</option>
+                    <option value="5" selected>Device 5</option>
+                    <option value="10">Device 10</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Time Range</label>
+                <select id="time-range">
+                    <option value="1h">Last Hour</option>
+                    <option value="24h">Last 24 Hours</option>
+                    <option value="7d" selected>Last 7 Days</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button onclick="queryData()">Query</button>
+            </div>
+        </div>
+        
+        <div id="error-message" style="display: none;" class="error"></div>
+        
+        <div class="chart-container">
+            <div class="chart-title">GPU Utilization Over Time</div>
+            <canvas id="util-chart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Power Consumption Over Time</div>
+            <canvas id="power-chart"></canvas>
+        </div>
+    </div>
+    
+    <script>
+        // API endpoint (adjust to match your REST API)
+        const API_BASE = 'http://localhost:8080';
+        
+        let utilChart = null;
+        let powerChart = null;
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        function queryData() {
+            const region = document.getElementById('region-select').value;
+            const device = document.getElementById('device-select').value;
+            const timeRange = document.getElementById('time-range').value;
+            
+            // Calculate time range
+            const now = Math.floor(Date.now() / 1000);
+            let startTs = 0;
+            if (timeRange === '1h') {
+                startTs = now - 3600;
+            } else if (timeRange === '24h') {
+                startTs = now - 86400;
+            } else {
+                startTs = now - 7 * 86400;
+            }
+            
+            // Build query URL
+            let url = `${API_BASE}/query?start_ts=${startTs}&end_ts=${now}`;
+            if (region !== '-1') url += `&region=${region}`;
+            if (device !== '-1') url += `&device=${device}`;
+            
+            // Show loading
+            document.getElementById('total-events').textContent = 'Loading...';
+            
+            // Fetch data
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateDashboard(data);
+                })
+                .catch(error => {
+                    console.error('Query error:', error);
+                    showError(`Query failed: ${error.message}`);
+                    // Use mock data for demo
+                    updateDashboard(getMockData());
+                });
+        }
+        
+        function updateDashboard(data) {
+            // Update stats
+            document.getElementById('total-events').textContent = 
+                data.total_count.toLocaleString();
+            document.getElementById('avg-util').textContent = 
+                data.avg_gpu_util.toFixed(1) + '%';
+            document.getElementById('max-power').textContent = 
+                data.max_power_actual.toFixed(0) + ' W';
+            
+            // Update charts
+            updateUtilChart(data);
+            updatePowerChart(data);
+        }
+        
+        function updateUtilChart(data) {
+            const ctx = document.getElementById('util-chart').getContext('2d');
+            
+            if (utilChart) {
+                utilChart.destroy();
+            }
+            
+            const labels = data.bins.map((bin, i) => {
+                const date = new Date(data.bin_timestamps[i] * 1000);
+                return date.toLocaleString();
+            });
+            
+            const utilData = data.bins.map(bin => 
+                bin.count > 0 ? bin.sum_util / bin.count : 0
+            );
+            
+            utilChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'GPU Utilization (%)',
+                        data: utilData,
+                        borderColor: '#4a9eff',
+                        backgroundColor: 'rgba(74, 158, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e6e6e6'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#888',
+                                maxRotation: 45
+                            },
+                            grid: {
+                                color: '#333'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#888'
+                            },
+                            grid: {
+                                color: '#333'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updatePowerChart(data) {
+            const ctx = document.getElementById('power-chart').getContext('2d');
+            
+            if (powerChart) {
+                powerChart.destroy();
+            }
+            
+            const labels = data.bins.map((bin, i) => {
+                const date = new Date(data.bin_timestamps[i] * 1000);
+                return date.toLocaleString();
+            });
+            
+            powerChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Power Actual (W)',
+                        data: data.bins.map(bin => bin.max_power_actual),
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Power Cap (W)',
+                        data: data.bins.map(bin => bin.max_power_cap),
+                        borderColor: '#51cf66',
+                        backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e6e6e6'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#888',
+                                maxRotation: 45
+                            },
+                            grid: {
+                                color: '#333'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#888'
+                            },
+                            grid: {
+                                color: '#333'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function getMockData() {
+            // Mock data for demonstration
+            const bins = [];
+            const timestamps = [];
+            const now = Math.floor(Date.now() / 1000);
+            
+            for (let i = 0; i < 100; i++) {
+                timestamps.push(now - (100 - i) * 600); // 10-minute intervals
+                bins.push({
+                    count: Math.floor(Math.random() * 100) + 50,
+                    sum_util: Math.random() * 8000 + 2000,
+                    max_power_actual: Math.random() * 100 + 250,
+                    max_power_cap: 300,
+                    min_power_cap: 200
+                });
+            }
+            
+            return {
+                total_count: bins.reduce((sum, b) => sum + b.count, 0),
+                avg_gpu_util: 65.5,
+                max_power_actual: 350,
+                max_power_cap: 300,
+                min_power_cap: 200,
+                bins: bins,
+                bin_timestamps: timestamps
+            };
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            queryData();
+        }, 30000);
+        
+        // Initial query
+        queryData();
+    </script>
+</body>
+</html>
+
