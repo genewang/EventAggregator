@@ -226,6 +226,15 @@ See `examples/dashboard.html` for a complete dashboard example.
 
 [Contributing guidelines]
 
+## Documentation
+
+- **[BUILD_GUIDE.md](BUILD_GUIDE.md)**: Step-by-step guide showing how the system was built, including architecture decisions, optimizations, and implementation details
+- **[ARCHITECTURE_V2.md](ARCHITECTURE_V2.md)**: Enhanced architecture with tiered storage, telemetry, and production features
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Core architecture overview
+- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**: Project summary and key features
+- **[BENCHMARK_GUIDE.md](BENCHMARK_GUIDE.md)**: Benchmarking and profiling guide
+- **[QUICKSTART.md](QUICKSTART.md)**: Quick start guide
+
 ## References
 
 - CUDA Best Practices Guide: https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/
