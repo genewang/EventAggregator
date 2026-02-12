@@ -73,7 +73,7 @@ flowchart TD
     
     SIMD --> Transfer[Async GPU Transfer<br/>cudaMemcpyAsync<br/>PCIe bandwidth optimized]
     
-    Transfer --> Columnar[Columnar SoA Layout<br/>Warp-coalesced access<br/>ts[], region[], util[]]
+    Transfer --> Columnar["Columnar SoA Layout<br/>Warp-coalesced access<br/>ts array, region array, util array"]
     
     Columnar --> Kernel[CUDA Kernel Processing<br/>Per-block reduction<br/>256x less contention]
     
@@ -91,7 +91,7 @@ flowchart TD
     
     Query --> SIMDQuery[SIMD Query Engine<br/>AVX-512 vectorization<br/>8-16x faster]
     
-    SIMDQuery --> Result[Query Result<br/><5ms hot, <200ms warm<br/><500ms cross-tier]
+    SIMDQuery --> Result["Query Result<br/>~5ms hot, ~200ms warm<br/>~500ms cross-tier"]
     
     style Hot fill:#ff6b6b
     style Warm fill:#ffd93d
@@ -216,26 +216,30 @@ sequenceDiagram
 This diagram illustrates the columnar memory layout optimization:
 
 ```mermaid
-graph LR
-    subgraph "Array of Structures (AoS) - Slower"
-        A1[Event 0<br/>ts, region, util] --> A2[Event 1<br/>ts, region, util]
-        A2 --> A3[Event 2<br/>ts, region, util]
-        A3 --> A4[...]
-        Note1[Warp reads scattered<br/>Poor coalescing<br/>2-3x slower]
+flowchart TB
+    subgraph AoS["Array of Structures (AoS) - Slower"]
+        direction LR
+        A1["Event 0<br/>ts, region, util"]
+        A2["Event 1<br/>ts, region, util"]
+        A3["Event 2<br/>ts, region, util"]
+        A4["..."]
+        A1 --> A2 --> A3 --> A4
+        Note1["Warp reads scattered<br/>Poor coalescing<br/>2-3x slower"]
     end
     
-    subgraph "Structure of Arrays (SoA) - Faster"
-        B1[ts[0,1,2...]<br/>Consecutive addresses] --> B2[region[0,1,2...]<br/>Consecutive addresses]
-        B2 --> B3[util[0,1,2...]<br/>Consecutive addresses]
-        Note2[Warp reads coalesced<br/>32 threads read<br/>consecutive addresses<br/>2-3x faster]
+    subgraph SoA["Structure of Arrays (SoA) - Faster"]
+        direction TB
+        B1["ts[0,1,2...]<br/>Consecutive addresses"]
+        B2["region[0,1,2...]<br/>Consecutive addresses"]
+        B3["util[0,1,2...]<br/>Consecutive addresses"]
+        B1 --> B2 --> B3
+        Note2["Warp reads coalesced<br/>32 threads read<br/>consecutive addresses<br/>2-3x faster"]
     end
     
-    subgraph "GPU Warp Access Pattern"
-        C1[Thread 0] --> C2[Thread 1]
-        C2 --> C3[Thread 2]
-        C3 --> C4[...]
-        C4 --> C5[Thread 31]
-        Note3[32 threads in warp<br/>Read consecutive addresses<br/>Perfect coalescing]
+    subgraph Warp["GPU Warp Access Pattern"]
+        direction LR
+        C1["Thread 0"] --> C2["Thread 1"] --> C3["Thread 2"] --> C4["..."] --> C5["Thread 31"]
+        Note3["32 threads in warp<br/>Read consecutive addresses<br/>Perfect coalescing"]
     end
     
     style B1 fill:#4d96ff
@@ -243,6 +247,9 @@ graph LR
     style B3 fill:#4d96ff
     style Note2 fill:#2ecc71
     style Note1 fill:#e74c3c
+    style AoS fill:#ffe5e5
+    style SoA fill:#e5f5ff
+    style Warp fill:#fff5e5
 ```
 
 ## 6. SIMD Query Engine Architecture
