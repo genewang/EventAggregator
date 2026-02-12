@@ -129,8 +129,9 @@ nsys profile --trace=cuda,nvtx ./build/benchmark_suite 1000000
 
 ## Documentation
 
+- **SYSTEM_DIAGRAMS.md**: Comprehensive system diagrams with Mermaid visualizations showing the complete HPC/AI stack (SIMD, Nsight, DCGM/NVML, NCCL, tiered storage)
 - **README.md**: User guide, build instructions, usage examples
-- **ARCHITECTURE_V2.md**: Enhanced architecture with tiered storage, telemetry
+- **ARCHITECTURE_V2.md**: Enhanced architecture with tiered storage, telemetry, and production features
 - **INTERVIEW_PITCH.md**: 30-second to 3-minute interview scripts
 - **BENCHMARK_GUIDE.md**: Benchmarking and profiling guide
 - **QUICKSTART.md**: Quick start guide

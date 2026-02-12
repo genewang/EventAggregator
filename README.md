@@ -228,11 +228,12 @@ See `examples/dashboard.html` for a complete dashboard example.
 
 ## Documentation
 
-- **[BUILD_GUIDE.md](BUILD_GUIDE.md)**: Step-by-step guide showing how the system was built, including architecture decisions, optimizations, and implementation details
+- **[SYSTEM_DIAGRAMS.md](SYSTEM_DIAGRAMS.md)**: Comprehensive system diagrams with Mermaid visualizations showing the complete HPC/AI stack integration
 - **[ARCHITECTURE_V2.md](ARCHITECTURE_V2.md)**: Enhanced architecture with tiered storage, telemetry, and production features
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: Core architecture overview
 - **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**: Project summary and key features
 - **[BENCHMARK_GUIDE.md](BENCHMARK_GUIDE.md)**: Benchmarking and profiling guide
+- **[BUILD_GUIDE.md](BUILD_GUIDE.md)**: Step-by-step guide showing how the system was built, including architecture decisions, optimizations, and implementation details
 - **[QUICKSTART.md](QUICKSTART.md)**: Quick start guide
 
 ## References
